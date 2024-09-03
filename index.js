@@ -6,10 +6,7 @@ const app = express();
 const port = 3001;
 
 // Path to your SQLite database file
-const dbPath = path.resolve(
-  "/Users/juhainamufassir/Downloads",
-  "addresses_sample.sqlite3"
-);
+const dbPath = path.resolve("./", "addresses_sample.sqlite3");
 
 // Connect to the SQLite database
 const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (err) => {
