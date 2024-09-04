@@ -49,6 +49,49 @@ app.get("/autocomplete", (req, res) => {
   });
 });
 
+// Address filtering by state endpoint
+app.get("/addresses-by-state", (req, res) => {
+  const state = req.query.state;
+
+  if (!state || state.length < 2) {
+    return res
+      .status(400)
+      .json({ error: "State query must be at least 2 characters long." });
+  }
+
+  // SQL query to search for addresses by state
+  const sql = `
+    SELECT * FROM addresses 
+    WHERE state LIKE ?
+    LIMIT 10
+  `;
+
+  db.all(sql, [`%${state}%`], (err, rows) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch data" });
+    } else {
+      res.json({ results: rows });
+    }
+  });
+});
+// Add this new endpoint to your existing Express app
+// Add this new endpoint to your existing Express app
+app.get("/states", (req, res) => {
+  const sql = "SELECT DISTINCT state FROM addresses ORDER BY state";
+
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch states" });
+    } else {
+      // Map to include state codes and names
+      const states = rows.map((row) => ({ code: row.state, name: row.state }));
+      res.json({ results: states });
+    }
+  });
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
