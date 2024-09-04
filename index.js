@@ -35,11 +35,11 @@ app.get("/autocomplete", (req, res) => {
   // SQL query to search for addresses matching the input query
   const sql = `
     SELECT * FROM addresses 
-    WHERE number LIKE ? AND street LIKE ?
+    WHERE number = ? AND street LIKE ?
     LIMIT 10
   `;
 
-  db.all(sql, [`%${number}%`, `%${street}%`], (err, rows) => {
+  db.all(sql, [number, `%${street}%`], (err, rows) => {
     if (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to fetch data" });
