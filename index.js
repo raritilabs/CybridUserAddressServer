@@ -27,14 +27,19 @@ app.get("/autocomplete", (req, res) => {
       .json({ error: "Query must be at least 3 characters long." });
   }
 
+  // Split the query into potential number and street parts
+  const queryParts = query.split(" ");
+  const number = queryParts[0];
+  const street = queryParts.slice(1).join(" ");
+
   // SQL query to search for addresses matching the input query
   const sql = `
     SELECT * FROM addresses 
-    WHERE street LIKE ? 
+    WHERE number LIKE ? AND street LIKE ?
     LIMIT 10
   `;
 
-  db.all(sql, [`%${query}%`], (err, rows) => {
+  db.all(sql, [`%${number}%`, `%${street}%`], (err, rows) => {
     if (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to fetch data" });
