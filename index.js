@@ -17,9 +17,10 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (err) => {
   }
 });
 
-// Address autocomplete API endpoint
+// Address autocomplete API endpoint with state filtering
 app.get("/autocomplete", (req, res) => {
   const query = req.query.q;
+  const state = req.query.state;
 
   if (!query || query.length < 3) {
     return res
@@ -27,19 +28,25 @@ app.get("/autocomplete", (req, res) => {
       .json({ error: "Query must be at least 3 characters long." });
   }
 
+  if (!state || state.length < 2) {
+    return res
+      .status(400)
+      .json({ error: "State query must be at least 2 characters long." });
+  }
+
   // Split the query into potential number and street parts
   const queryParts = query.split(" ");
   const number = queryParts[0];
   const street = queryParts.slice(1).join(" ");
 
-  // SQL query to search for addresses matching the input query
+  // SQL query to search for addresses matching the input query and state
   const sql = `
     SELECT * FROM addresses 
-    WHERE number = ? AND street LIKE ?
+    WHERE number = ? AND street LIKE ? AND state LIKE ?
     LIMIT 10
   `;
 
-  db.all(sql, [number, `%${street}%`], (err, rows) => {
+  db.all(sql, [number, `%${street}%`, `%${state}%`], (err, rows) => {
     if (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to fetch data" });
@@ -75,19 +82,22 @@ app.get("/addresses-by-state", (req, res) => {
     }
   });
 });
-// Add this new endpoint to your existing Express app
+
 // Add this new endpoint to your existing Express app
 app.get("/states", (req, res) => {
-  const sql = "SELECT DISTINCT state FROM addresses ORDER BY state";
+  // SQL query to search for addresses matching the input query and state
+  const sql = `
+  SELECT * FROM addresses 
+  WHERE number = ? AND street LIKE ? AND state = ?
+  LIMIT 10
+`;
 
-  db.all(sql, [], (err, rows) => {
+  db.all(sql, [number, `%${street}%`, state], (err, rows) => {
     if (err) {
       console.error(err);
-      res.status(500).json({ error: "Failed to fetch states" });
+      res.status(500).json({ error: "Failed to fetch data" });
     } else {
-      // Map to include state codes and names
-      const states = rows.map((row) => ({ code: row.state, name: row.state }));
-      res.json({ results: states });
+      res.json({ results: rows });
     }
   });
 });
