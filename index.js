@@ -1,9 +1,14 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const cors = require("cors"); // Import cors
+const axios = require("axios"); // Import axios
 
 const app = express();
 const port = 3001;
+
+// Enable CORS
+app.use(cors()); // Allow all origins by default
 
 // Path to your SQLite database file
 const dbPath = path.resolve("./", "addresses_sample.sqlite3");
@@ -83,14 +88,21 @@ app.get("/addresses-by-state", (req, res) => {
   });
 });
 
-// Add this new endpoint to your existing Express app
+// New endpoint for fetching addresses based on query and state
 app.get("/states", (req, res) => {
-  // SQL query to search for addresses matching the input query and state
+  const number = req.query.number;
+  const street = req.query.street;
+  const state = req.query.state;
+
+  if (!number || !street || !state) {
+    return res.status(400).json({ error: "Invalid input parameters" });
+  }
+
   const sql = `
-  SELECT * FROM addresses 
-  WHERE number = ? AND street LIKE ? AND state = ?
-  LIMIT 10
-`;
+    SELECT * FROM addresses 
+    WHERE number = ? AND street LIKE ? AND state = ?
+    LIMIT 10
+  `;
 
   db.all(sql, [number, `%${street}%`, state], (err, rows) => {
     if (err) {
@@ -100,6 +112,23 @@ app.get("/states", (req, res) => {
       res.json({ results: rows });
     }
   });
+});
+
+// New exchange rates endpoint
+app.get("/api/exchange-rates", async (req, res) => {
+  try {
+    const response = await axios.get("https://copperx.io/api/comparisons", {
+      params: {
+        sendAmount: req.query.sendAmount,
+        sourceCurrency: req.query.sourceCurrency,
+        targetCurrency: req.query.targetCurrency,
+      },
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching exchange rates", error);
+    res.status(500).send("Error fetching exchange rates");
+  }
 });
 
 // Start the server
