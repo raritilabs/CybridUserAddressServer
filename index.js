@@ -1,14 +1,14 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
-const cors = require("cors"); // Import cors
+// const cors = require("cors"); // Import cors
 const axios = require("axios"); // Import axios
 
 const app = express();
-const port = 3001;
+const port = 3006;
 
 // Enable CORS
-app.use(cors()); // Allow all origins by default
+// app.use(cors()); // Allow all origins by default
 
 // Path to your SQLite database file
 const dbPath = path.resolve("./", "addresses_sample.sqlite3");
@@ -117,13 +117,9 @@ app.get("/states", (req, res) => {
 // New exchange rates endpoint
 app.get("/api/exchange-rates", async (req, res) => {
   try {
-    const response = await axios.get("https://copperx.io/api/comparisons", {
-      params: {
-        sendAmount: req.query.sendAmount,
-        sourceCurrency: req.query.sourceCurrency,
-        targetCurrency: req.query.targetCurrency,
-      },
-    });
+    const response = await axios.get(
+      "https://api.coinbase.com/v2/exchange-rates?currency=USD"
+    );
     res.json(response.data);
   } catch (error) {
     console.error("Error fetching exchange rates", error);
