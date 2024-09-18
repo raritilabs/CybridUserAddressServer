@@ -115,10 +115,10 @@ app.get("/states", (req, res) => {
 });
 
 // New exchange rates endpoint
-app.get("/api/exchange-rates", async (req, res) => {
+app.get("/", async (req, res) => {
   try {
     const response = await axios.get(
-      "https://api.coinbase.com/v2/exchange-rates?currency=USD"
+      "https://copperx.io/api/comparisons?sendAmount=1000&sourceCurrency=USD&targetCurrency=INR"
     );
     res.json(response.data);
   } catch (error) {
